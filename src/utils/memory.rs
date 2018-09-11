@@ -1,7 +1,7 @@
 use libc;
 use std::mem;
 
-use super::error::{SparserError, Result};
+use super::error::{Result, SparserError};
 const ALIGNMENT: usize = 64;
 
 #[cfg(windows)]

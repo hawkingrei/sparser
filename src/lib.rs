@@ -1,6 +1,7 @@
 extern crate libc;
-pub mod utils;
+extern crate rand;
 pub mod bitmap;
+pub mod utils;
 #[cfg(test)]
 mod tests {
     #[test]
