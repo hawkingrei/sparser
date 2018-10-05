@@ -16,6 +16,7 @@
 // under the License.
 
 static BIT_MASK: [u8; 8] = [1, 2, 4, 8, 16, 32, 64, 128];
+static UNSET_BIT_MASK: [u8; 8] = [254, 253, 251, 247, 239, 223, 191, 127];
 
 static POPCOUNT_TABLE: [u8; 256] = [
     0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
@@ -51,6 +52,12 @@ pub fn get_bit(data: &[u8], i: i64) -> bool {
 #[inline]
 pub fn set_bit(data: &mut [u8], i: i64) {
     data[(i / 8) as usize] |= BIT_MASK[(i % 8) as usize]
+}
+
+/// Unsets bit at position `i` for `data`
+#[inline]
+pub fn unset_bit(data: &mut [u8], i: i64) {
+    data[(i / 8) as usize] &= UNSET_BIT_MASK[(i % 8) as usize]
 }
 
 /// Returns the number of 1-bits in `data`
