@@ -31,6 +31,15 @@ impl Bitmap {
     pub fn is_set(&self, i: i64) -> bool {
         bit_util::get_bit(self.bits.data(), i)
     }
+
+    pub fn reset(&mut self) {
+        let len = self.bits.len();
+        let mut v = Vec::with_capacity(len);
+        for _ in 0..len {
+            v.push(255); // 1 is not null
+        }
+        self.bits = Buffer::from(&v[..]);
+    }
 }
 
 impl From<Buffer> for Bitmap {
