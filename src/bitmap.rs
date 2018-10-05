@@ -73,7 +73,7 @@ mod tests {
 
     #[test]
     fn test_bitmap_is_set() {
-        let bitmap = Bitmap::from(Buffer::from([0b01001010]));
+        let mut bitmap = Bitmap::from(Buffer::from([0b01001010]));
         assert_eq!(false, bitmap.is_set(0));
         assert_eq!(true, bitmap.is_set(1));
         assert_eq!(false, bitmap.is_set(2));
@@ -82,5 +82,11 @@ mod tests {
         assert_eq!(false, bitmap.is_set(5));
         assert_eq!(true, bitmap.is_set(6));
         assert_eq!(false, bitmap.is_set(7));
+        unsafe {
+            bitmap.set(7);
+            assert_eq!(true, bitmap.is_set(7));
+            bitmap.unset(7);
+            assert_eq!(false, bitmap.is_set(7));
+        }
     }
 }
