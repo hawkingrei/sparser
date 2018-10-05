@@ -32,6 +32,12 @@ impl Bitmap {
         bit_util::get_bit(self.bits.data(), i)
     }
 
+    pub unsafe fn set(&mut self, i: i64) {
+        let raw_data = self.bits.raw_data() as *mut u8;
+        let len = self.bits.len();
+        bit_util::set_bit(std::slice::from_raw_parts_mut(raw_data, len), i)
+    }
+
     pub fn reset(&mut self) {
         let len = self.bits.len();
         let mut v = Vec::with_capacity(len);
