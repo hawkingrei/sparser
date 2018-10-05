@@ -1,7 +1,7 @@
-use utils::buffer::Buffer;
 use utils::bit_util;
+use utils::buffer::Buffer;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub struct Bitmap {
     bits: Buffer,
 }
