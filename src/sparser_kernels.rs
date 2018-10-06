@@ -86,10 +86,12 @@ pub fn search_epi16(reg: __m256i, base: Vec<char>) -> u32 {
  * @return the number of matches found.
  */
 #[inline]
-pub fn search_epi32(reg: __m256i, base: Vec<char>) -> u32 {
+pub fn search_epi32(reg: __m256i, base: &str) -> u32 {
     let mut count = 0;
     unsafe {
         let val = _mm256_loadu_si256(base.as_ptr() as *const __m256i);
+        println!("val: {:?}", val);
+        println!("reg: {:?}", reg);
         let mut mask = _mm256_movemask_epi8(_mm256_cmpeq_epi32(reg, val));
         println!("mask: {:?}", mask);
         mask &= 0x11111111;
@@ -114,7 +116,7 @@ mod test {
         unsafe {
             let s: &str = "Asked whether an agreement could be reached at the next meeting of European leaders on 17 October. He said a deal could be agree";
             let req: __m256i = _mm256_loadu_si256(s.as_ptr() as *const __m256i);
-            let base: Vec<char> = vec!['a', 'n'];
+            let base = "Asked whe";
             let result = search_epi32(req, base);
             println!("{:?}", result);
             assert!(result >= 0);
