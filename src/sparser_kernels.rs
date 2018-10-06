@@ -50,5 +50,49 @@ pub fn search_epi8(reg: __m256i, base: Vec<char>) -> u32 {
             count = count + 1;
         }
     }
-    return 0;
+    return count;
+}
+
+/** Search for an 16-bit search string.
+ *
+ * @param reg the register filled with the search value
+ * @param base the data to search. Should be at least 32 bytes long.
+ *
+ * @return the number of matches found.
+ */
+pub fn search_epi16(reg: __m256i, base: Vec<char>) -> u32 {
+    let mut count = 0;
+    unsafe {
+        let val = _mm256_loadu_si256(base.as_ptr() as *const __m256i);
+        let mut mask = _mm256_movemask_epi8(_mm256_cmpeq_epi16(reg, val));
+        mask &= 0x55555555;
+        while (mask != 0) {
+            let index = ffs(mask) - 1;
+            mask &= !(1 << index);
+            count = count + 1;
+        }
+    }
+    return count;
+}
+
+/** Search for an 32-bit search string.
+ *
+ * @param reg the register filled with the search value
+ * @param base the data to search. Should be at least 32 bytes long.
+ *
+ * @return the number of matches found.
+ */
+pub fn search_epi32(reg: __m256i, base: Vec<char>) -> u32 {
+    let mut count = 0;
+    unsafe {
+        let val = _mm256_loadu_si256(base.as_ptr() as *const __m256i);
+        let mut mask = _mm256_movemask_epi8(_mm256_cmpeq_epi32(reg, val));
+        mask &= 0x11111111;
+        while (mask != 0) {
+            let index = ffs(mask) - 1;
+            mask &= !(1 << index);
+            count = count + 1;
+        }
+    }
+    return count;
 }
