@@ -3,6 +3,7 @@ use std::arch::x86::*;
 #[cfg(target_arch = "x86_64")]
 use std::arch::x86_64::*;
 
+#[inline]
 fn ffs(x: i32) -> i32 {
     let mut r: i32 = 1;
     let mut val = x;
@@ -39,6 +40,7 @@ fn ffs(x: i32) -> i32 {
  *
  * @return the number of matches found.
  */
+#[inline]
 pub fn search_epi8(reg: __m256i, base: Vec<char>) -> u32 {
     let mut count = 0;
     unsafe {
@@ -60,6 +62,7 @@ pub fn search_epi8(reg: __m256i, base: Vec<char>) -> u32 {
  *
  * @return the number of matches found.
  */
+#[inline]
 pub fn search_epi16(reg: __m256i, base: Vec<char>) -> u32 {
     let mut count = 0;
     unsafe {
@@ -82,6 +85,7 @@ pub fn search_epi16(reg: __m256i, base: Vec<char>) -> u32 {
  *
  * @return the number of matches found.
  */
+#[inline]
 pub fn search_epi32(reg: __m256i, base: Vec<char>) -> u32 {
     let mut count = 0;
     unsafe {
