@@ -33,6 +33,13 @@ fn ffs(x: i32) -> i32 {
     return r;
 }
 
+#[test]
+fn test_ffs() {
+    assert!(ffs(1) == 1);
+    assert!(ffs(16) == 5);
+    assert!(ffs(64) == 7);
+}
+
 /** Search for an 8-bit search string.
  *
  * @param reg the register filled with the search value
