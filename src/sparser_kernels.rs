@@ -48,11 +48,10 @@ fn test_ffs() {
  * @return the number of matches found.
  */
 #[inline]
-pub fn search_epi8(reg: __m256i, base: Vec<char>) -> u32 {
+pub fn search_epi8(reg: __m256i, base: __m256i) -> u32 {
     let mut count = 0;
     unsafe {
-        let val = _mm256_loadu_si256(base.as_ptr() as *const __m256i);
-        let mut mask = _mm256_movemask_epi8(_mm256_cmpeq_epi8(reg, val));
+        let mut mask = _mm256_movemask_epi8(_mm256_cmpeq_epi8(reg, base));
         while (mask != 0) {
             let index = ffs(mask) - 1;
             mask &= !(1 << index);
@@ -70,11 +69,10 @@ pub fn search_epi8(reg: __m256i, base: Vec<char>) -> u32 {
  * @return the number of matches found.
  */
 #[inline]
-pub fn search_epi16(reg: __m256i, base: Vec<char>) -> u32 {
+pub fn search_epi16(reg: __m256i, base: __m256i) -> u32 {
     let mut count = 0;
     unsafe {
-        let val = _mm256_loadu_si256(base.as_ptr() as *const __m256i);
-        let mut mask = _mm256_movemask_epi8(_mm256_cmpeq_epi16(reg, val));
+        let mut mask = _mm256_movemask_epi8(_mm256_cmpeq_epi16(reg, base));
         mask &= 0x55555555;
         while (mask != 0) {
             let index = ffs(mask) - 1;
@@ -93,16 +91,11 @@ pub fn search_epi16(reg: __m256i, base: Vec<char>) -> u32 {
  * @return the number of matches found.
  */
 #[inline]
-pub fn search_epi32(reg: __m256i, base: &str) -> u32 {
+pub fn search_epi32(reg: __m256i, base: __m256i) -> u32 {
     let mut count = 0;
     unsafe {
-        let val = _mm256_loadu_si256(base.as_ptr() as *const __m256i);
-        println!("val: {:?}", val);
-        println!("reg: {:?}", reg);
-        let mut mask = _mm256_movemask_epi8(_mm256_cmpeq_epi32(reg, val));
-        println!("mask: {:?}", mask);
-        mask &= 0x11111111;
-        println!("mask: {:?}", mask);
+        let mut mask = _mm256_movemask_epi8(_mm256_cmpeq_epi32(reg, base));
+        mask = mask & 0x11111111;
         while (mask != 0) {
             let index = ffs(mask) - 1;
             mask &= !(1 << index);
@@ -114,19 +107,66 @@ pub fn search_epi32(reg: __m256i, base: &str) -> u32 {
 
 #[cfg(test)]
 mod test {
+    use sparser_kernels::search_epi16;
     use sparser_kernels::search_epi32;
+    use sparser_kernels::search_epi8;
     use std::arch::x86_64::__m256i;
     use std::arch::x86_64::_mm256_loadu_si256;
 
     #[test]
     fn test_search_epi32() {
         unsafe {
-            let s: &str = "Asked whether an agreement could be reached at the next meeting of European leaders on 17 October. He said a deal could be agree";
-            let req: __m256i = _mm256_loadu_si256(s.as_ptr() as *const __m256i);
-            let base = "Asked whe";
-            let result = search_epi32(req, base);
-            println!("{:?}", result);
-            assert!(result >= 0);
+            let load_bytes: [u8; 32] = [
+                1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+                24, 25, 26, 27, 28, 29, 30, 31, 32,
+            ];
+            let lb_ptr = load_bytes.as_ptr();
+            let req: __m256i = _mm256_loadu_si256(lb_ptr as *const __m256i);
+            let base: [u8; 32] = [
+                9, 10, 11, 12, 9, 10, 11, 12, 9, 10, 11, 12, 13, 14, 15, 16, 9, 10, 11, 12, 9, 10,
+                11, 12, 9, 10, 11, 12, 9, 10, 11, 12,
+            ];
+            let base_req: __m256i = _mm256_loadu_si256(base.as_ptr() as *const __m256i);
+            let result = search_epi32(req, base_req);
+            assert!(result == 2);
+        }
+    }
+
+    #[test]
+    fn test_search_epi8() {
+        unsafe {
+            let load_bytes: [u8; 32] = [
+                1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+                24, 25, 26, 27, 28, 29, 30, 31, 32,
+            ];
+            let lb_ptr = load_bytes.as_ptr();
+            let req: __m256i = _mm256_loadu_si256(lb_ptr as *const __m256i);
+            let base: [u8; 32] = [
+                1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 32,
+            ];
+            let base_req: __m256i = _mm256_loadu_si256(base.as_ptr() as *const __m256i);
+            let result = search_epi8(req, base_req);
+            assert!(result == 3);
+        }
+    }
+
+    #[test]
+    fn test_search_epi16() {
+        unsafe {
+            let load_bytes: [u8; 32] = [
+                1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+                24, 25, 26, 27, 28, 29, 30, 31, 32,
+            ];
+            let lb_ptr = load_bytes.as_ptr();
+            let req: __m256i = _mm256_loadu_si256(lb_ptr as *const __m256i);
+            let base: [u8; 32] = [
+                1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 11, 12, 0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 32, 32,
+            ];
+            let base_req: __m256i = _mm256_loadu_si256(base.as_ptr() as *const __m256i);
+            let result = search_epi16(req, base_req);
+            assert!(result == 2);
         }
     }
 }
