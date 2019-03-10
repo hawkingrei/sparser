@@ -16,8 +16,8 @@ const PARSER_MEASUREMENT_SAMPLES: usize = 10;
 
 // Defines a sparser query, which is currently a set of conjunctive string
 // terms that we search for.
+#[derive(Default)]
 pub struct sparser_query {
-    count: usize,
     queries: Vec<Vec<u8>>,
 }
 
@@ -66,3 +66,29 @@ pub struct search_data {
     // Total cycles spent *processing and skipping*.
     total_cycles: u64,
 }
+
+impl sparser_query {
+    pub fn new() -> Self {
+        Default::default()
+    }
+
+    pub fn add(&mut self, string: String) {
+        let mut string_bytes = string.as_bytes();
+        let data = if SPARSER_MAX_QUERY_LENGTH < string_bytes.len() {
+            string_bytes
+                .get(0..SPARSER_MAX_QUERY_LENGTH)
+                .unwrap()
+                .to_vec()
+        } else {
+            string_bytes.to_vec()
+        };
+        self.queries.push(data);
+    }
+}
+
+#[inline(always)]
+fn rf_cost(len: usize) -> f64 {
+    return len as f64 * 8.0;
+}
+
+pub fn search_schedules() {}
