@@ -1,5 +1,8 @@
 use crate::bitmap::Bitmap;
 
+use decompose_ascii_rawfilters::ascii_rawfilters;
+use rdtsc;
+
 // Max size of a single search string.
 const SPARSER_MAX_QUERY_LENGTH: usize = 16;
 // Max number of search strings in a single query.
@@ -64,7 +67,7 @@ pub struct search_data {
     // number of schedules processed.
     processed: u64,
     // Total cycles spent *processing and skipping*.
-    total_cycles: u64,
+    total_cycles: i64,
 }
 
 impl sparser_query {
@@ -91,4 +94,27 @@ fn rf_cost(len: usize) -> f64 {
     return len as f64 * 8.0;
 }
 
-pub fn search_schedules() {}
+pub fn search_schedules(
+    predicates: ascii_rawfilters,
+    mut sd: search_data,
+    len: usize,
+    start: usize,
+    result: Vec<usize>,
+) {
+    if len == 0 {
+        let start_rdtsc = rdtsc();
+        for i in 0..result.len() {
+            for j in 0..result.len() {
+                if i != j
+                    && predicates.sources.get(*result.get(i).unwrap()).unwrap()
+                        == predicates.sources.get(*result.get(j).unwrap()).unwrap()
+                {
+                    let end_rdtsc = rdtsc();
+                    sd.skipped += 1;
+                    sd.total_cycles += (end_rdtsc - start_rdtsc);
+                    return;
+                }
+            }
+        }
+    }
+}

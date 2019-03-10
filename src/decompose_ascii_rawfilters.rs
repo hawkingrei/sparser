@@ -4,10 +4,10 @@ const REGSZ: usize = 4;
 
 #[derive(Default)]
 pub struct ascii_rawfilters {
-    strings: Vec<String>,
-    sources: Vec<usize>,
-    region: Vec<Vec<u8>>,
-    num_strings: i32,
+    pub strings: Vec<String>,
+    pub sources: Vec<usize>,
+    pub region: Vec<Vec<u8>>,
+    pub num_strings: i32,
 }
 
 pub fn decompose(predicates: Vec<String>) -> ascii_rawfilters {
