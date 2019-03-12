@@ -11,7 +11,7 @@ const SPARSER_MAX_QUERY_COUNT: usize = 32;
 // Max substrings to consider.
 const MAX_SUBSTRINGS: usize = 32;
 // Max records to sample.
-const MAX_SAMPLES: usize = 1000;
+const MAX_SAMPLES: usize = 1024;
 // Max record depth.
 const MAX_SCHEDULE_SIZE: usize = 4;
 
@@ -116,5 +116,17 @@ pub fn search_schedules(
                 }
             }
         }
+        let first_index = result.get(0).unwrap();
+        unsafe {
+            sd.joint
+                .set(if sd.passthrough_masks.is_set(*first_index as i64) {
+                    1
+                } else {
+                    0
+                });
+        }
+
+        let total_cost = rf_cost(predicates.region.get(*first_index).unwrap().len());
+        for i in 0..result.len() {}
     }
 }
