@@ -51,13 +51,13 @@ pub struct search_data {
     // The false positive masks for each sample.
     passthrough_masks: Vec<Bitmap>,
     // Cost of the full parser.
-    full_parse_cost: u64,
+    full_parse_cost: f64,
     // Best cost so far.
-    best_cost: u64,
+    best_cost: f64,
     // Best schedule (indexes into ascii_rawfilters_t).
-    best_schedule: Vec<u32>,
+    best_schedule: Vec<usize>,
     // Length of the full parser.
-    schedule_len: u32,
+    schedule_len: usize,
 
     // The joint bitmap (to prevent small repeated malloc's)
     joint: Bitmap,
@@ -95,11 +95,11 @@ fn rf_cost(len: usize) -> f64 {
 }
 
 pub fn search_schedules(
-    predicates: ascii_rawfilters,
-    mut sd: search_data,
+    predicates: &ascii_rawfilters,
+    sd: &mut search_data,
     len: usize,
     start: usize,
-    result: Vec<usize>,
+    result: &mut Vec<usize>,
 ) {
     if len == 0 {
         let start_rdtsc = rdtsc();
@@ -119,7 +119,57 @@ pub fn search_schedules(
         let first_index = result.get(0).unwrap();
         sd.joint = *sd.passthrough_masks.get(*first_index).unwrap();
 
-        let total_cost = rf_cost(predicates.region.get(*first_index).unwrap().len());
-        for i in 0..result.len() {}
+        let mut total_cost = rf_cost(predicates.region.get(*first_index).unwrap().len());
+        for i in 0..result.len() {
+            let index = result.get(i).unwrap();
+            let joint_rate = sd.joint.count();
+            let filter_cost = rf_cost(predicates.region.get(i).unwrap().len());
+            let rate = joint_rate as f64 / sd.num_records as f64;
+            total_cost += filter_cost * rate;
+
+            sd.joint = sd
+                .joint
+                .and(*sd.passthrough_masks.get(*first_index).unwrap());
+        }
+
+        let joint_rate = sd.joint.count();
+        let filter_cost = sd.full_parse_cost;
+        let rate = joint_rate as f64 / sd.num_records as f64;
+
+        total_cost += filter_cost * rate;
+
+        if (total_cost < sd.best_cost) {
+            assert!(result.len() <= MAX_SCHEDULE_SIZE);
+            sd.best_schedule = result.clone();
+            sd.schedule_len = result.len();
+        }
+
+        let end_rdtsc = rdtsc();
+        sd.processed += 1;
+        sd.total_cycles += end_rdtsc - start_rdtsc;
+        return;
     }
+
+    for i in start..predicates.num_strings as usize - len {
+        let result_len = result.len();
+        if let Some(elem) = result.get_mut(result_len - len) {
+            *elem = i;
+        }
+        search_schedules(&predicates, sd, len - 1, i + 1, result);
+    }
+}
+
+pub struct calibrate_timing {
+    sampling_total: f64,
+    searching_total: f64,
+    grepping_total: f64,
+
+    cycles_per_schedule_avg: f64,
+    cycles_per_parse_avg: f64,
+
+    // scheudles.
+    processed: f64,
+    skipped: f64,
+
+    total: f64,
 }

@@ -49,8 +49,11 @@ impl Bitmap {
                 result.count += _popcnt64(result.bits[i]) as usize;
             }
         }
-
         result
+    }
+
+    pub fn count(&self) -> usize {
+        return self.count;
     }
 }
 
