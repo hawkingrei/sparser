@@ -49,7 +49,7 @@ pub struct search_data {
     // Number of records sampled.
     num_records: u64,
     // The false positive masks for each sample.
-    passthrough_masks: Bitmap,
+    passthrough_masks: Vec<Bitmap>,
     // Cost of the full parser.
     full_parse_cost: u64,
     // Best cost so far.
@@ -117,14 +117,7 @@ pub fn search_schedules(
             }
         }
         let first_index = result.get(0).unwrap();
-        unsafe {
-            sd.joint
-                .set(if sd.passthrough_masks.is_set(*first_index as i64) {
-                    1
-                } else {
-                    0
-                });
-        }
+        sd.joint = *sd.passthrough_masks.get(*first_index).unwrap();
 
         let total_cost = rf_cost(predicates.region.get(*first_index).unwrap().len());
         for i in 0..result.len() {}
