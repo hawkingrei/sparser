@@ -1,7 +1,8 @@
 use crate::bitmap::Bitmap;
 
-use decompose_ascii_rawfilters::ascii_rawfilters;
-use rdtsc;
+use crate::common::time_start;
+use crate::decompose_ascii_rawfilters::ascii_rawfilters;
+use crate::rdtsc;
 
 // Max size of a single search string.
 const SPARSER_MAX_QUERY_LENGTH: usize = 16;
@@ -159,6 +160,7 @@ pub fn search_schedules(
     }
 }
 
+#[derive(Default)]
 pub struct calibrate_timing {
     sampling_total: f64,
     searching_total: f64,
@@ -174,4 +176,27 @@ pub struct calibrate_timing {
     total: f64,
 }
 
-fn sparser_calibrate() {}
+fn sparser_calibrate(predicates: ascii_rawfilters) {
+    let mut timing: calibrate_timing = Default::default();
+    let start_e2e = time_start();
+
+    let mut passthrough_masks: Vec<Bitmap> = Vec::with_capacity(MAX_SUBSTRINGS);
+    for _ in 0..MAX_SUBSTRINGS {
+        passthrough_masks.push(Default::default());
+    }
+
+    // The number of substrings to process.
+    let mut num_substrings = if predicates.num_strings > MAX_SUBSTRINGS as i32 {
+        MAX_SUBSTRINGS as i32
+    } else {
+        predicates.num_strings
+    };
+
+    // Counts number of records processed thus far.
+    let mut records = 0;
+    let mut parsed_records = 0;
+    let mut passed = 0;
+    let mut parse_cost = 0;
+
+    let start = time_start();
+}
