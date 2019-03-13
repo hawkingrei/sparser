@@ -173,3 +173,5 @@ pub struct calibrate_timing {
 
     total: f64,
 }
+
+fn sparser_calibrate() {}
