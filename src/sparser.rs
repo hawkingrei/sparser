@@ -176,7 +176,7 @@ pub struct calibrate_timing {
     total: f64,
 }
 
-fn sparser_calibrate(predicates: ascii_rawfilters) {
+fn sparser_calibrate(sample: Vec<u8>, predicates: ascii_rawfilters, delimiter: u8) {
     let mut timing: calibrate_timing = Default::default();
     let start_e2e = time_start();
 
@@ -199,4 +199,19 @@ fn sparser_calibrate(predicates: ascii_rawfilters) {
     let mut parse_cost = 0;
 
     let start = time_start();
+    while (records < MAX_SAMPLES) {
+        let newline = unsafe {
+            libc::memchr(
+                sample.as_ptr() as *const libc::c_void,
+                delimiter as libc::c_int,
+                sample.len(),
+            )
+        };
+
+        if newline.is_null() {
+            break;
+        }
+
+        records += 1;
+    }
 }
