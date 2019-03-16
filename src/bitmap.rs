@@ -56,34 +56,3 @@ impl Bitmap {
         return self.count;
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_bitmap_length() {
-        assert_eq!(64, Bitmap::new(63 * 8).len());
-        assert_eq!(64, Bitmap::new(64 * 8).len());
-        assert_eq!(128, Bitmap::new(65 * 8).len());
-    }
-
-    #[test]
-    fn test_bitmap_is_set() {
-        let mut bitmap = Bitmap::from(Buffer::from([0b01001010]));
-        assert_eq!(false, bitmap.is_set(0));
-        assert_eq!(true, bitmap.is_set(1));
-        assert_eq!(false, bitmap.is_set(2));
-        assert_eq!(true, bitmap.is_set(3));
-        assert_eq!(false, bitmap.is_set(4));
-        assert_eq!(false, bitmap.is_set(5));
-        assert_eq!(true, bitmap.is_set(6));
-        assert_eq!(false, bitmap.is_set(7));
-        unsafe {
-            bitmap.set(7);
-            assert_eq!(true, bitmap.is_set(7));
-            bitmap.unset(7);
-            assert_eq!(false, bitmap.is_set(7));
-        }
-    }
-}

@@ -40,6 +40,10 @@ fn test_ffs() {
     assert!(ffs(64) == 7);
 }
 
+pub fn mem(reg: Vec<u8>, base: Vec<U8>) -> bool {
+    return true;
+}
+
 /** Search for an 8-bit search string.
  *
  * @param reg the register filled with the search value
@@ -108,9 +112,9 @@ pub fn search_epi32(reg: __m256i, base: __m256i) -> u32 {
 
 #[cfg(test)]
 mod test {
-    use sparser_kernels::search_epi16;
-    use sparser_kernels::search_epi32;
-    use sparser_kernels::search_epi8;
+    use crate::sparser_kernels::search_epi16;
+    use crate::sparser_kernels::search_epi32;
+    use crate::sparser_kernels::search_epi8;
     use std::arch::x86_64::__m256i;
     use std::arch::x86_64::_mm256_loadu_si256;
 

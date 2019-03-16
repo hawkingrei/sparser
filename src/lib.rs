@@ -1,3 +1,5 @@
+#![feature(ptr_wrapping_offset_from)]
+
 pub mod bitmap;
 pub mod common;
 pub mod decompose_ascii_rawfilters;

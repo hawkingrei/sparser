@@ -176,7 +176,7 @@ pub struct calibrate_timing {
     total: f64,
 }
 
-fn sparser_calibrate(sample: Vec<u8>, predicates: ascii_rawfilters, delimiter: u8) {
+fn sparser_calibrate(mut sample: Vec<u8>, predicates: ascii_rawfilters, delimiter: u8) {
     let mut timing: calibrate_timing = Default::default();
     let start_e2e = time_start();
 
@@ -199,19 +199,33 @@ fn sparser_calibrate(sample: Vec<u8>, predicates: ascii_rawfilters, delimiter: u
     let mut parse_cost = 0;
 
     let start = time_start();
-    while (records < MAX_SAMPLES) {
-        let newline = unsafe {
-            libc::memchr(
+
+    let mut remaining_length = sample.len();
+    unsafe {
+        while (records < MAX_SAMPLES) {
+            let newline = libc::memchr(
                 sample.as_ptr() as *const libc::c_void,
                 delimiter as libc::c_int,
-                sample.len(),
-            )
-        };
+                remaining_length,
+            );
 
-        if newline.is_null() {
-            break;
+            if newline.is_null() {
+                break;
+            }
+
+            let line = sample.clone();
+            sample = sample
+                .get((sample.as_ptr().wrapping_offset_from(newline as *const u8) as usize + 1)..)
+                .unwrap()
+                .to_vec();
+            remaining_length -= sample.as_ptr().wrapping_offset_from(line.as_ptr()) as usize;
+
+            let grep_timer = time_start();
+            for i in 0..num_substrings {
+                let predicate = predicates.strings.get(i as usize).unwrap();
+            }
+
+            records += 1;
         }
-
-        records += 1;
     }
 }
