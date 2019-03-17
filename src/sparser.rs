@@ -1,8 +1,11 @@
 use crate::bitmap::Bitmap;
 
-use crate::common::time_start;
+use crate::common::{time_start, time_stop};
 use crate::decompose_ascii_rawfilters::ascii_rawfilters;
 use crate::rdtsc;
+use crate::sparser_kernels::memmem;
+
+use std::f64;
 
 // Max size of a single search string.
 const SPARSER_MAX_QUERY_LENGTH: usize = 16;
@@ -46,6 +49,7 @@ pub struct sparser_stats {
     fraction_passed_incorrect: f64,
 }
 
+#[derive(Default)]
 pub struct search_data {
     // Number of records sampled.
     num_records: u64,
@@ -101,11 +105,12 @@ pub fn search_schedules(
     len: usize,
     start: usize,
     result: &mut Vec<usize>,
+    result_len: usize,
 ) {
     if len == 0 {
         let start_rdtsc = rdtsc();
-        for i in 0..result.len() {
-            for j in 0..result.len() {
+        for i in 0..result_len {
+            for j in 0..result_len {
                 if i != j
                     && predicates.sources.get(*result.get(i).unwrap()).unwrap()
                         == predicates.sources.get(*result.get(j).unwrap()).unwrap()
@@ -121,7 +126,7 @@ pub fn search_schedules(
         sd.joint = *sd.passthrough_masks.get(*first_index).unwrap();
 
         let mut total_cost = rf_cost(predicates.region.get(*first_index).unwrap().len());
-        for i in 0..result.len() {
+        for i in 0..result_len {
             let index = result.get(i).unwrap();
             let joint_rate = sd.joint.count();
             let filter_cost = rf_cost(predicates.region.get(i).unwrap().len());
@@ -140,7 +145,7 @@ pub fn search_schedules(
         total_cost += filter_cost * rate;
 
         if (total_cost < sd.best_cost) {
-            assert!(result.len() <= MAX_SCHEDULE_SIZE);
+            assert!(result_len <= MAX_SCHEDULE_SIZE);
             sd.best_schedule = result.clone();
             sd.schedule_len = result.len();
         }
@@ -156,7 +161,7 @@ pub fn search_schedules(
         if let Some(elem) = result.get_mut(result_len - len) {
             *elem = i;
         }
-        search_schedules(&predicates, sd, len - 1, i + 1, result);
+        search_schedules(&predicates, sd, len - 1, i + 1, result, result_len);
     }
 }
 
@@ -176,7 +181,12 @@ pub struct calibrate_timing {
     total: f64,
 }
 
-fn sparser_calibrate(mut sample: Vec<u8>, predicates: ascii_rawfilters, delimiter: u8) {
+fn sparser_calibrate(
+    mut sample: Vec<u8>,
+    predicates: ascii_rawfilters,
+    delimiter: u8,
+    callback: Box<Fn(Vec<u8>) -> u64>,
+) {
     let mut timing: calibrate_timing = Default::default();
     let start_e2e = time_start();
 
@@ -198,7 +208,7 @@ fn sparser_calibrate(mut sample: Vec<u8>, predicates: ascii_rawfilters, delimite
     let mut passed = 0;
     let mut parse_cost = 0;
 
-    let start = time_start();
+    let mut start = time_start();
 
     let mut remaining_length = sample.len();
     unsafe {
@@ -223,9 +233,58 @@ fn sparser_calibrate(mut sample: Vec<u8>, predicates: ascii_rawfilters, delimite
             let grep_timer = time_start();
             for i in 0..num_substrings {
                 let predicate = predicates.strings.get(i as usize).unwrap();
+                // TODO
+                if memmem(&line, predicate.as_bytes().to_vec()) {
+                    passthrough_masks.get_mut(i as usize).unwrap().set(records);
+                // debug find
+                } else {
+                    // debug not find
+                }
+            }
+
+            let grep_time = time_stop(grep_timer) as f64;
+            timing.grepping_total += grep_time;
+            timing.total = time_stop(start_e2e) as f64;
+
+            // To estimate the full parser's cost.
+            if (records < PARSER_MEASUREMENT_SAMPLES) {
+                let start = rdtsc();
+                passed += callback(line);
+                let end = rdtsc();
+                parse_cost += (end - start);
+                parsed_records += 1;
             }
 
             records += 1;
+            timing.cycles_per_parse_avg = parse_cost as f64;
         }
+
+        timing.sampling_total = time_stop(start) as f64;
+        start = time_start();
+
+        //SPARSER_DBG("%lu passed\n", passed);
+
+        // The average parse cost.
+        parse_cost = parse_cost / parsed_records;
+
+        let mut sd: search_data = Default::default();
+        //memset(&sd, 0, sizeof(sd));
+        sd.num_records = records as u64;
+        sd.passthrough_masks = passthrough_masks;
+        sd.full_parse_cost = parse_cost as f64;
+        sd.best_cost = f64::MAX;
+        sd.joint = Default::default();
+
+        let mut result: Vec<usize> = vec![0; MAX_SCHEDULE_SIZE];
+
+        for i in 0..MAX_SCHEDULE_SIZE {
+            search_schedules(&predicates, &mut sd, i, 0, &mut result, i);
+        }
+
+        timing.searching_total = time_stop(start) as f64;
+        timing.cycles_per_schedule_avg = sd.total_cycles as f64 / sd.processed as f64;
+
+        timing.processed = sd.processed as f64;
+        timing.skipped = sd.skipped as f64;
     }
 }

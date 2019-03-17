@@ -1,4 +1,5 @@
 #![feature(ptr_wrapping_offset_from)]
+#![feature(repeat_generic_slice)]
 
 pub mod bitmap;
 pub mod common;
