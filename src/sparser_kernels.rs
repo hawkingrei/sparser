@@ -40,8 +40,18 @@ fn test_ffs() {
     assert!(ffs(64) == 7);
 }
 
-pub fn mem(reg: Vec<u8>, base: Vec<U8>) -> bool {
+pub fn mem(reg: Vec<u8>, base: Vec<u8>) -> bool {
+    if reg.len() < 32 {
+        reg.resize_with(32, Default::default);
+        
+    } else if reg.len() == 32{
+
+    } else {
+
+    }
+    
     return true;
+
 }
 
 /** Search for an 8-bit search string.
