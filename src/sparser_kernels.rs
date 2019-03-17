@@ -41,17 +41,16 @@ fn test_ffs() {
 }
 
 pub fn mem(reg: Vec<u8>, base: Vec<u8>) -> bool {
-    if reg.len() < 32 {
-        reg.resize_with(32, Default::default);
-        
-    } else if reg.len() == 32{
+    let mut local_reg = reg.clone();
+    if local_reg.len() < 32 {
+        local_reg.resize_with(32, Default::default);
+    } else if local_reg.len() == 32 {
 
     } else {
 
     }
-    
-    return true;
 
+    return true;
 }
 
 /** Search for an 8-bit search string.
