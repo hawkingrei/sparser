@@ -3,6 +3,6 @@ sudo: false
 
 matrix:
   include:
-    - rust: stable
+    - rust: nightly
 script:
   - cargo build
