@@ -286,5 +286,19 @@ fn sparser_calibrate(
 
         timing.processed = sd.processed as f64;
         timing.skipped = sd.skipped as f64;
+
+        //static char printer[4096];
+        //printer[0] = 0;
+        //for (int i = 0; i < sd.schedule_len; i++) {
+        //	strcat(printer, predicates->strings[sd.best_schedule[i]]);
+        //	strcat(printer, " ");
+        //}
+        //SPARSER_DBG("Best schedule: %s\n", printer);
+        let mut squery: sparser_query = Default::default();
+        for i in 0..sd.schedule_len {
+            squery.add(predicates.strings.get(*sd.best_schedule.get(i as usize).unwrap() as usize).unwrap().to_string())
+        }
+
+        timing.total = time_stop(start_e2e) as f64;
     }
 }
