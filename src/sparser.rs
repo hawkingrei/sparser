@@ -28,6 +28,7 @@ pub struct sparser_query {
     queries: Vec<Vec<u8>>,
 }
 
+#[derive(Default)]
 pub struct sparser_stats {
     // Number of records processed.
     records: u64,
