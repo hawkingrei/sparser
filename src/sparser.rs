@@ -296,9 +296,19 @@ fn sparser_calibrate(
         //SPARSER_DBG("Best schedule: %s\n", printer);
         let mut squery: sparser_query = Default::default();
         for i in 0..sd.schedule_len {
-            squery.add(predicates.strings.get(*sd.best_schedule.get(i as usize).unwrap() as usize).unwrap().to_string())
+            squery.add(
+                predicates
+                    .strings
+                    .get(*sd.best_schedule.get(i as usize).unwrap() as usize)
+                    .unwrap()
+                    .to_string(),
+            )
         }
 
         timing.total = time_stop(start_e2e) as f64;
     }
+}
+
+fn sparser_search(query: sparser_query) {
+    let mut stats: sparser_stats = Default::default();
 }
