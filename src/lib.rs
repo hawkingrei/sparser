@@ -6,6 +6,7 @@ pub mod common;
 pub mod decompose_ascii_rawfilters;
 pub mod sparser;
 pub mod sparser_kernels;
+pub mod utils;
 
 use std::convert::TryInto;
 
