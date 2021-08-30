@@ -29,9 +29,11 @@ pub fn allocate_aligned(size: i64) -> Result<*mut u8> {
 pub fn allocate_aligned(size: i64) -> Result<*mut u8> {
     unsafe {
         let mut page: MaybeUninit<*mut libc::c_void> = MaybeUninit::uninit();
-        let result = libc::posix_memalign(*&page.as_mut_ptr(), ALIGNMENT, size as usize);
+        let result = libc::posix_memalign(page.as_mut_ptr(), ALIGNMENT, size as usize);
         match result {
-            0 => Ok(mem::transmute::<*mut libc::c_void, *mut u8>(*page.as_mut_ptr())),
+            0 => Ok(mem::transmute::<*mut libc::c_void, *mut u8>(
+                *page.as_mut_ptr(),
+            )),
             _ => Err(SparserError::MemoryError(
                 "Failed to allocate memory".to_string(),
             )),
