@@ -46,10 +46,7 @@ impl Bitmap {
 
     pub fn reset(&mut self) {
         let len = self.bits.len();
-        let mut v = Vec::with_capacity(len);
-        for _ in 0..len {
-            v.push(255); // 1 is not null
-        }
+        let v = vec![255; len];
         self.bits = Buffer::from(&v[..]);
     }
 }

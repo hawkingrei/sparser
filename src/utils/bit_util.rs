@@ -184,5 +184,4 @@ mod tests {
         assert_eq!(5, count_set_bits_offset(&[0b11111111, 0b11111111], 11));
         assert_eq!(0, count_set_bits_offset(&[0b11111111, 0b11111111], 16));
     }
-
 }

@@ -1,7 +1,10 @@
-use libc;
 use std::mem;
 
+use libc;
+
 use super::error::{Result, SparserError};
+use std::mem::MaybeUninit;
+
 const ALIGNMENT: usize = 64;
 
 #[cfg(windows)]
@@ -25,10 +28,10 @@ pub fn allocate_aligned(size: i64) -> Result<*mut u8> {
 #[cfg(not(windows))]
 pub fn allocate_aligned(size: i64) -> Result<*mut u8> {
     unsafe {
-        let mut page: *mut libc::c_void = mem::uninitialized();
-        let result = libc::posix_memalign(&mut page, ALIGNMENT, size as usize);
+        let mut page: MaybeUninit<*mut libc::c_void> = MaybeUninit::uninit();
+        let result = libc::posix_memalign(*&page.as_mut_ptr(), ALIGNMENT, size as usize);
         match result {
-            0 => Ok(mem::transmute::<*mut libc::c_void, *mut u8>(page)),
+            0 => Ok(mem::transmute::<*mut libc::c_void, *mut u8>(*page.as_mut_ptr())),
             _ => Err(SparserError::MemoryError(
                 "Failed to allocate memory".to_string(),
             )),
@@ -44,10 +47,8 @@ pub fn free_aligned(p: *const u8) {
 }
 
 #[cfg(not(windows))]
-pub fn free_aligned(p: *const u8) {
-    unsafe {
-        libc::free(mem::transmute::<*const u8, *mut libc::c_void>(p));
-    }
+pub unsafe fn free_aligned(p: *const u8) {
+    libc::free(mem::transmute::<*const u8, *mut libc::c_void>(p));
 }
 
 pub unsafe fn memcpy(dst: *mut u8, src: *const u8, len: usize) {

@@ -35,7 +35,9 @@ impl PartialEq for BufferData {
 /// Release the underlying memory when the current buffer goes out of scope
 impl Drop for BufferData {
     fn drop(&mut self) {
-        memory::free_aligned(self.ptr);
+        unsafe {
+            memory::free_aligned(self.ptr);
+        }
     }
 }
 
@@ -82,7 +84,7 @@ impl Buffer {
     /// Note that this should be used cautiously, and the returned pointer should not be
     /// stored anywhere, to avoid dangling pointers.
     pub fn raw_data(&self) -> *const u8 {
-        unsafe { self.data.ptr.offset(self.offset as isize) }
+        unsafe { self.data.ptr.add(self.offset) }
     }
 
     /// Returns an empty buffer.
@@ -213,7 +215,8 @@ mod tests {
         let buffer_copy = thread::spawn(move || {
             // access buffer in another thread.
             buffer.clone()
-        }).join();
+        })
+        .join();
 
         assert!(buffer_copy.is_ok());
         assert_eq!(buffer2, buffer_copy.ok().unwrap());
