@@ -1,7 +1,7 @@
 use std::mem;
 use std::sync::Arc;
 
-use utils::memory;
+use crate::utils::memory;
 
 /// Buffer is a contiguous memory region of fixed size and is aligned at a 64-byte
 /// boundary. Buffer is immutable.

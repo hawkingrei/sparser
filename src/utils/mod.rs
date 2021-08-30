@@ -1,4 +1,3 @@
-pub mod bit_util;
-pub mod buffer;
-pub mod error;
-pub mod memory;
+mod bit_util;
+mod buffer;
+mod memory;
